@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  espresso-brew-backend
+
+  Sample SAM Template for espresso-brew-backend
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  EspressoBackendApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      Description: The Dev stage for the Espresso Backend API
+      Models:
+        CoffeeBean:
+          type: object
+          required:
+            - name
+            - roaster
+            - roast_type
+            - tasting_notes
+          properties:
+            name:
+              type: string
+            roaster:
+              type: string
+            roast_type:
+              type: string
+            tasting_notes:
+              type: string
+
+  CoffeeBeanModelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: coffee_bean_model/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        EspressoBackendRootApi:
+          Type: Api
+          Properties:
+            Path: /coffee-bean
+            Method: ANY
+            RestApiId: !Ref EspressoBackendApi
+        EspressoBackendGreedyApi:
+          Type: Api
+          Properties:
+            Path: /coffee-bean/{proxy+}
+            Method: ANY
+            RestApiId: !Ref EspressoBackendApi
+
+Outputs:
+  EspressoBackendApi:
+    Description: "API Gateway endpoint URL for Dev stage for Espresso Backend API"
+    Value: !Sub "https://${EspressoBackendApi}.execute-api.${AWS::Region}.amazonaws.com/Dev"
+  CoffeeBeanModelFunctionArn:
+    Description: "Coffee Bean Model Lambda Function ARN"
+    Value: !GetAtt CoffeeBeanModelFunction.Arn
+  CoffeeBeanModelFunctionIamRoleArn:
+    Description: "Implicit IAM Role created for Coffee Bean Model Lambda function"
+    Value: !GetAtt CoffeeBeanModelFunctionRole.Arn

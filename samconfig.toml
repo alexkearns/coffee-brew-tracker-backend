@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "espresso-backend-api"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-w3smha2mojrf"
+s3_prefix = "espresso-backend-api"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
