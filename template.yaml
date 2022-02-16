@@ -38,10 +38,16 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: coffee_bean_model/
+      Tracing: Active
       Handler: app.lambda_handler
       Runtime: python3.9
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: coffee_bean_model_function
       Architectures:
         - x86_64
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:11
       Events:
         EspressoBackendRootApi:
           Type: Api
