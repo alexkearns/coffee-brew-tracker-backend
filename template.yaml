@@ -11,28 +11,33 @@ Globals:
     Timeout: 3
 
 Resources:
+  EspressoBackendDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI-SK
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - AttributeName: SK
+              KeyType: HASH
+
   EspressoBackendApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Dev
       Description: The Dev stage for the Espresso Backend API
-      Models:
-        CoffeeBean:
-          type: object
-          required:
-            - name
-            - roaster
-            - roast_type
-            - tasting_notes
-          properties:
-            name:
-              type: string
-            roaster:
-              type: string
-            roast_type:
-              type: string
-            tasting_notes:
-              type: string
 
   CoffeeBeanModelFunction:
     Type: AWS::Serverless::Function
@@ -43,22 +48,33 @@ Resources:
       Runtime: python3.9
       Environment:
         Variables:
+          DYNAMODB_TABLE: !Ref EspressoBackendDynamoDBTable
           POWERTOOLS_SERVICE_NAME: coffee_bean_model_function
       Architectures:
         - x86_64
       Layers:
         - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:11
+      Policies:
+        - Statement:
+            - Sid: AllowAccessToDynamoDB
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Query
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EspressoBackendDynamoDBTable}
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EspressoBackendDynamoDBTable}/index/*
       Events:
         EspressoBackendRootApi:
           Type: Api
           Properties:
-            Path: /coffee-bean
+            Path: /coffee-beans
             Method: ANY
             RestApiId: !Ref EspressoBackendApi
         EspressoBackendGreedyApi:
           Type: Api
           Properties:
-            Path: /coffee-bean/{proxy+}
+            Path: /coffee-beans/{proxy+}
             Method: ANY
             RestApiId: !Ref EspressoBackendApi
 
