@@ -41,6 +41,48 @@ Resources:
       Cors:
         AllowMethods: "'*'"
 
+  CoffeeBrewModelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: coffee_brew_model/
+      Tracing: Active
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref EspressoBackendDynamoDBTable
+          POWERTOOLS_SERVICE_NAME: coffee_brew_model_function
+      Architectures:
+        - x86_64
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:017000801446:layer:AWSLambdaPowertoolsPython:11
+      Policies:
+        - Statement:
+            - Sid: AllowAccessToDynamoDB
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:GetItem
+                - dynamodb:DeleteItem
+                - dynamodb:UpdateItem
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EspressoBackendDynamoDBTable}
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EspressoBackendDynamoDBTable}/index/*
+      Events:
+        EspressoBackendRootApi:
+          Type: Api
+          Properties:
+            Path: /coffee-beans/{bean}/brews
+            Method: ANY
+            RestApiId: !Ref EspressoBackendApi
+        EspressoBackendGreedyApi:
+          Type: Api
+          Properties:
+            Path: /coffee-beans/{bean}/brews/{brew}
+            Method: ANY
+            RestApiId: !Ref EspressoBackendApi
+
   CoffeeBeanModelFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -79,7 +121,7 @@ Resources:
         EspressoBackendGreedyApi:
           Type: Api
           Properties:
-            Path: /coffee-beans/{proxy+}
+            Path: /coffee-beans/{bean}
             Method: ANY
             RestApiId: !Ref EspressoBackendApi
 
