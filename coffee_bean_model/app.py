@@ -3,7 +3,7 @@ import os
 from botocore.exceptions import ClientError
 from uuid import uuid4
 from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.event_handler import APIGatewayRestResolver
+from aws_lambda_powertools.event_handler.api_gateway import APIGatewayRestResolver, CORSConfig
 from aws_lambda_powertools.event_handler.exceptions import (
     BadRequestError,
     NotFoundError
@@ -11,7 +11,8 @@ from aws_lambda_powertools.event_handler.exceptions import (
 
 tracer = Tracer()
 logger = Logger()
-app = APIGatewayRestResolver()
+cors_config = CORSConfig(allow_origin="http://localhost:3001")
+app = APIGatewayRestResolver(cors=cors_config)
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.getenv("DYNAMODB_TABLE"))
 

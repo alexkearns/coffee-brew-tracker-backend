@@ -38,6 +38,8 @@ Resources:
     Properties:
       StageName: Dev
       Description: The Dev stage for the Espresso Backend API
+      Cors:
+        AllowMethods: "'*'"
 
   CoffeeBeanModelFunction:
     Type: AWS::Serverless::Function
